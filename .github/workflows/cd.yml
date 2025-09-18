@@ -19,7 +19,7 @@ jobs:
 
       # Télécharger l'artefact build du CI
       - name: Download build artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: react-build       # nom de l'artefact uploadé dans CI
           path: ./dist            # sera disponible dans ./dist du runner
