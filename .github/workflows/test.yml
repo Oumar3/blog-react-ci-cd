@@ -1,0 +1,36 @@
+name: Test React App
+
+on:
+  workflow_run:
+    workflows: ["Continuous Integration"]
+    types:
+      - completed
+
+jobs:
+  test:
+    # S'exécute uniquement si le CI a réussi
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22.x, 21.x, 20.x]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Télécharger l'artefact build unique
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: react-build-${{ github.event.workflow_run.run_number }}
+          path: ./dist
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Run tests
+        run: |
+          cd dist
+          npm test
