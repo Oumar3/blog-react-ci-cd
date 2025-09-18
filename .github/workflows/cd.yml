@@ -1,0 +1,47 @@
+name: Continuous Deployment
+
+# Déclenche le CD après le succès du workflow CI
+on:
+  workflow_run:
+    workflows: ["Continuous Integration"]   # Nom exact du workflow CI
+    types:
+      - completed
+
+jobs:
+  deploy:
+    # Ne s'exécute que si le CI a réussi
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout pour récupérer le repo (optionnel si artefact suffit)
+      - uses: actions/checkout@v3
+
+      # Télécharger l'artefact build du CI
+      - name: Download build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: react-build       # nom de l'artefact uploadé dans CI
+          path: ./dist            # sera disponible dans ./dist du runner
+
+      # Déploiement sur le serveur via SSH
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # Se placer dans le répertoire de l'app sur le VPS
+            cd /var/www/my-react-app
+
+            # Supprimer l'ancien build
+            rm -rf *
+
+            # Copier le nouveau build depuis le runner
+            # Le chemin ./dist correspond à l'artefact téléchargé
+            # Nous utilisons rsync pour copier proprement
+            rsync -avz --delete $GITHUB_WORKSPACE/dist/ .
+
+            # Redémarrage serveur si nécessaire (nginx, pm2, etc.)
+            # pm2 restart my-app || echo "No process manager configured"
