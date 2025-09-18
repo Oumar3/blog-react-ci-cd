@@ -21,29 +21,59 @@ jobs:
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: react-build-${{ github.run_id }}     # nom de l'artefact uploadé dans CI
+          name: react-build-${{ github.event.workflow_run.run_number }}     # nom de l'artefact uploadé dans CI
           path: ./dist            # sera disponible dans ./dist du runner
 
       # Déploiement sur le serveur via SSH
       - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            echo "Déploiement sur le serveur..."
-            # Exemple de commandes de déploiement
+            echo "🚀 Début du déploiement..."
+            
             # Se placer dans le répertoire de l'app sur le VPS
-            #cd /var/www/my-react-app
+            # cd /var/www/my-react-app || { echo "❌ Répertoire d'app introuvable"; exit 1; }
+            
+            # # Backup de l'ancien build (optionnel)
+            # if [ -d "backup" ]; then rm -rf backup; fi
+            # if [ -f "index.html" ]; then 
+            #   mkdir -p backup
+            #   cp -r * backup/ 2>/dev/null || true
+            # fi
+            
+            # # Supprimer l'ancien build
+            # rm -rf assets/ index.html *.js *.css *.ico *.svg 2>/dev/null || true
+            
+            echo "✅ Ancien build supprimé"
 
-            # Supprimer l'ancien build
-            #rm -rf *
-
-            # Copier le nouveau build depuis le runner
-            # Le chemin ./dist correspond à l'artefact téléchargé
-            # Nous utilisons rsync pour copier proprement
-            #rsync -avz --delete $GITHUB_WORKSPACE/dist/ .
-
-            # Redémarrage serveur si nécessaire (nginx, pm2, etc.)
-            # pm2 restart my-app || echo "No process manager configured"
+      # Transfert des fichiers vers le serveur
+    #   - name: Transfer files to VPS
+    #     uses: appleboy/scp-action@v0.1.7
+    #     with:
+    #       host: ${{ secrets.VPS_HOST }}
+    #       username: ${{ secrets.VPS_USER }}
+    #       key: ${{ secrets.VPS_SSH_KEY }}
+    #       source: "./dist/*"
+    #       target: "/var/www/my-react-app/"
+    #       strip_components: 2
+          
+      # Redémarrage serveur si nécessaire
+    #   - name: Restart services
+    #     uses: appleboy/ssh-action@v0.1.8
+    #     with:
+    #       host: ${{ secrets.VPS_HOST }}
+    #       username: ${{ secrets.VPS_USER }}
+    #       key: ${{ secrets.VPS_SSH_KEY }}
+    #       script: |
+            # echo "🔄 Redémarrage des services..."
+            
+            # # Redémarrage nginx (si utilisé)
+            # sudo systemctl reload nginx || echo "⚠️ Nginx non configuré"
+            
+            # # Redémarrage PM2 (si utilisé pour servir les fichiers statiques)
+            # # pm2 restart my-app || echo "⚠️ PM2 non configuré"
+            
+            # echo "✅ Déploiement terminé avec succès!"

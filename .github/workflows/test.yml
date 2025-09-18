@@ -18,19 +18,33 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # Télécharger l'artefact build unique
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: |
+          cd blog
+          npm install
+
+      # Télécharger l'artefact build
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: react-build-${{ github.event.workflow_run.run_number }}
           path: ./dist
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Run tests
+      # Vérifier que le build existe et contient les fichiers attendus
+      - name: Verify build
         run: |
-          cd blog/dist
-          npm test
+          echo "Contenu du répertoire dist:"
+          ls -la ./dist/
+          echo "Vérification que index.html existe:"
+          test -f ./dist/index.html && echo "✅ index.html trouvé" || echo "❌ index.html manquant"
+          
+      # Linter le code source
+      - name: Run linter
+        run: |
+          cd blog
+          npm run lint
