@@ -32,5 +32,5 @@ jobs:
 
       - name: Run tests
         run: |
-          cd dist
+          cd blog/dist
           npm test
