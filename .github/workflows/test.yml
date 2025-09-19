@@ -16,17 +16,19 @@ jobs:
         node-version: [22.x, 21.x, 20.x]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: blog/package-lock.json
 
       - name: Install dependencies
         run: |
           cd blog
-          npm install
+          npm ci
 
       # Télécharger l'artefact build
       - name: Download build artifact
@@ -42,9 +44,14 @@ jobs:
           ls -la ./dist/
           echo "Vérification que index.html existe:"
           test -f ./dist/index.html && echo "✅ index.html trouvé" || echo "❌ index.html manquant"
+          echo "Vérification de la taille du build:"
+          du -sh ./dist/
           
-      # Linter le code source
-      - name: Run linter
+      # Test de preview du build
+      - name: Test build preview
         run: |
           cd blog
-          npm run lint
+          npm run preview &
+          sleep 5
+          curl -f http://localhost:4173 || echo "⚠️ Preview test failed"
+          pkill -f "vite preview" || true

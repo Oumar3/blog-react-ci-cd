@@ -15,7 +15,7 @@ jobs:
 
     steps:
       # Checkout pour récupérer le repo (optionnel si artefact suffit)
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Télécharger l'artefact build du CI
       - name: Download build artifact

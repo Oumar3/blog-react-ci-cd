@@ -14,17 +14,24 @@ jobs:
         node-version: [22.x, 21.x, 20.x]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: blog/package-lock.json
 
       - name: Install dependencies
         run: |
           cd blog
-          npm install
+          npm ci
+
+      - name: Run linter
+        run: |
+          cd blog
+          npm run lint
 
       - name: Build app
         run: |
