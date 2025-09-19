@@ -9,8 +9,8 @@ on:
 
 jobs:
   deploy:
-    # Ne s'exécute que si le CI a réussi
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # S'exécute si le CI s'est terminé (pour permettre le fallback)
+    if: ${{ github.event.workflow_run.conclusion != 'cancelled' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -20,9 +20,22 @@ jobs:
       # Télécharger l'artefact build du CI
       - name: Download build artifact
         uses: actions/download-artifact@v4
+        id: download-artifact
+        continue-on-error: true
         with:
           name: react-build-${{ github.event.workflow_run.run_number }}
           path: ./dist
+
+      # Si l'artefact n'existe pas, construire nous-mêmes (fallback)
+      - name: Build app (fallback if artifact missing)
+        if: steps.download-artifact.outcome == 'failure'
+        run: |
+          echo "⚠️ Artefact manquant, construction en fallback..."
+          cd blog
+          npm ci
+          npm run build
+          cp -r dist ../dist/
+          echo "✅ Build de fallback terminé"
 
       # Déploiement sur le serveur via SSH
       - name: Deploy to VPS

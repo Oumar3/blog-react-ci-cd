@@ -8,8 +8,8 @@ on:
 
 jobs:
   test:
-    # S'exécute uniquement si le CI a réussi
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # S'exécute uniquement si le CI s'est terminé (succès OU échec)
+    if: ${{ github.event.workflow_run.conclusion != 'cancelled' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -28,13 +28,21 @@ jobs:
           npm ci
 
       # Vérifier que le CI a bien créé un artefact
-      - name: Check CI status
+      - name: Check CI status and artifacts
         run: |
           echo "🔍 Workflow CI info:"
           echo "Run ID: ${{ github.event.workflow_run.id }}"
           echo "Run Number: ${{ github.event.workflow_run.run_number }}"
           echo "Conclusion: ${{ github.event.workflow_run.conclusion }}"
           echo "Status: ${{ github.event.workflow_run.status }}"
+          echo "Head SHA: ${{ github.event.workflow_run.head_sha }}"
+          echo "📦 Artefact attendu: react-build-${{ github.event.workflow_run.run_number }}"
+          
+          # Si le CI a échoué, on le signale
+          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+            echo "⚠️ ATTENTION: Le workflow CI n'a pas réussi (${{ github.event.workflow_run.conclusion }})"
+            echo "Le fallback sera utilisé pour construire l'application"
+          fi
 
       # Télécharger l'artefact build du CI
       - name: Download build artifact
