@@ -37,6 +37,17 @@ jobs:
           cp -r dist ../dist/
           echo "✅ Build de fallback terminé"
 
+      # Vérifier que les fichiers de build sont prêts
+      - name: Verify deployment files
+        run: |
+          echo "📦 Vérification des fichiers de déploiement:"
+          ls -la ./dist/
+          echo "📁 Contenu détaillé:"
+          find ./dist -type f -exec ls -lh {} \;
+          echo "📊 Taille totale du build:"
+          du -sh ./dist/
+          echo "✅ Fichiers prêts pour déploiement"
+
       # Déploiement sur le serveur via SSH
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.8
@@ -47,46 +58,58 @@ jobs:
           script: |
             echo "🚀 Début du déploiement..."
             
-            # Se placer dans le répertoire de l'app sur le VPS
-            # cd /var/www/my-react-app || { echo "❌ Répertoire d'app introuvable"; exit 1; }
+            # Vérification de l'environnement
+            echo "📍 Répertoire courant: $(pwd)"
+            echo "👤 Utilisateur: $(whoami)"
+            echo "🕒 Date: $(date)"
+            echo "💾 Espace disque disponible:"
+            df -h
             
-            # # Backup de l'ancien build (optionnel)
+            # Simulation du déploiement
+            echo "📦 Simulation: vérification du répertoire d'app..."
+            # cd /var/www/my-react-app || { echo "❌ Répertoire d'app introuvable"; exit 1; }
+            echo "✅ Répertoire d'app OK (simulation)"
+            
+            echo "🔄 Simulation: backup de l'ancien build..."
             # if [ -d "backup" ]; then rm -rf backup; fi
             # if [ -f "index.html" ]; then 
             #   mkdir -p backup
             #   cp -r * backup/ 2>/dev/null || true
             # fi
+            echo "✅ Backup terminé (simulation)"
             
-            # # Supprimer l'ancien build
+            echo "🗑️ Simulation: suppression de l'ancien build..."
             # rm -rf assets/ index.html *.js *.css *.ico *.svg 2>/dev/null || true
+            echo "✅ Ancien build supprimé (simulation)"
             
-            echo "✅ Ancien build supprimé"
+            echo "🎉 Déploiement simulé terminé avec succès!"
 
-      # Transfert des fichiers vers le serveur
-    #   - name: Transfer files to VPS
-    #     uses: appleboy/scp-action@v0.1.7
-    #     with:
-    #       host: ${{ secrets.VPS_HOST }}
-    #       username: ${{ secrets.VPS_USER }}
-    #       key: ${{ secrets.VPS_SSH_KEY }}
-    #       source: "./dist/*"
-    #       target: "/var/www/my-react-app/"
-    #       strip_components: 2
+      # Transfert des fichiers vers le serveur (COMMENTÉ - décommenter pour déploiement réel)
+      # - name: Transfer files to VPS
+      #   uses: appleboy/scp-action@v0.1.7
+      #   with:
+      #     host: ${{ secrets.VPS_HOST }}
+      #     username: ${{ secrets.VPS_USER }}
+      #     key: ${{ secrets.VPS_SSH_KEY }}
+      #     source: "./dist/*"
+      #     target: "/var/www/my-react-app/"
+      #     strip_components: 1
+      #     rm: true  # Supprime les fichiers distants avant copie
           
-      # Redémarrage serveur si nécessaire
-    #   - name: Restart services
-    #     uses: appleboy/ssh-action@v0.1.8
-    #     with:
-    #       host: ${{ secrets.VPS_HOST }}
-    #       username: ${{ secrets.VPS_USER }}
-    #       key: ${{ secrets.VPS_SSH_KEY }}
-    #       script: |
-            # echo "🔄 Redémarrage des services..."
-            
-            # # Redémarrage nginx (si utilisé)
-            # sudo systemctl reload nginx || echo "⚠️ Nginx non configuré"
-            
-            # # Redémarrage PM2 (si utilisé pour servir les fichiers statiques)
-            # # pm2 restart my-app || echo "⚠️ PM2 non configuré"
-            
-            # echo "✅ Déploiement terminé avec succès!"
+      # Redémarrage serveur si nécessaire (COMMENTÉ - décommenter pour déploiement réel)
+      # - name: Restart services
+      #   uses: appleboy/ssh-action@v0.1.8
+      #   with:
+      #     host: ${{ secrets.VPS_HOST }}
+      #     username: ${{ secrets.VPS_USER }}
+      #     key: ${{ secrets.VPS_SSH_KEY }}
+      #     script: |
+      #       echo "🔄 Redémarrage des services..."
+      #       
+      #       # Redémarrage nginx (si utilisé)
+      #       sudo systemctl reload nginx || echo "⚠️ Nginx non configuré"
+      #       
+      #       # Redémarrage PM2 (si utilisé pour servir les fichiers statiques)
+      #       # pm2 restart my-app || echo "⚠️ PM2 non configuré"
+      #       
+      #       echo "✅ Déploiement terminé avec succès!"
