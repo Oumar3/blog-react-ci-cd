@@ -17,12 +17,12 @@ jobs:
       # Checkout pour récupérer le repo (optionnel si artefact suffit)
       - uses: actions/checkout@v4
 
-      # Télécharger l'artefact build du CI (utilise celui de Node 22.x)
+      # Télécharger l'artefact build du CI
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: react-build-22.x-${{ github.event.workflow_run.run_number }}     # nom de l'artefact uploadé dans CI
-          path: ./dist            # sera disponible dans ./dist du runner
+          name: react-build-${{ github.event.workflow_run.run_number }}
+          path: ./dist
 
       # Déploiement sur le serveur via SSH
       - name: Deploy to VPS
