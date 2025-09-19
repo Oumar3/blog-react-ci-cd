@@ -38,10 +38,10 @@ jobs:
           cd blog
           npm run build
 
-      # Upload artefact une seule fois avec un nom unique
+      # Upload artefact avec nom unique par version Node
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: react-build-${{ github.run_number }}
+          name: react-build-${{ matrix.node-version }}-${{ github.run_number }}
           path: blog/dist/
           if-no-files-found: warn
