@@ -27,12 +27,33 @@ jobs:
           cd blog
           npm ci
 
+      # Vérifier que le CI a bien créé un artefact
+      - name: Check CI status
+        run: |
+          echo "🔍 Workflow CI info:"
+          echo "Run ID: ${{ github.event.workflow_run.id }}"
+          echo "Run Number: ${{ github.event.workflow_run.run_number }}"
+          echo "Conclusion: ${{ github.event.workflow_run.conclusion }}"
+          echo "Status: ${{ github.event.workflow_run.status }}"
+
       # Télécharger l'artefact build du CI
       - name: Download build artifact
         uses: actions/download-artifact@v4
+        id: download-artifact
+        continue-on-error: true
         with:
           name: react-build-${{ github.event.workflow_run.run_number }}
           path: ./dist
+
+      # Si l'artefact n'existe pas, construire nous-mêmes
+      - name: Build app (fallback if artifact missing)
+        if: steps.download-artifact.outcome == 'failure'
+        run: |
+          echo "⚠️ Artefact manquant, construction en fallback..."
+          cd blog
+          npm run build
+          cp -r dist ../dist/
+          echo "✅ Build de fallback terminé"
 
       # Vérifier que le build existe et contient les fichiers attendus
       - name: Verify build

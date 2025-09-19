@@ -33,6 +33,23 @@ jobs:
         run: |
           cd blog
           npm run build
+          echo "✅ Build terminé"
+          ls -la dist/ || echo "❌ Répertoire dist manquant"
+
+      # Vérifier que le build est valide avant upload
+      - name: Verify build
+        run: |
+          cd blog
+          if [ ! -d "dist" ]; then
+            echo "❌ Erreur: Répertoire dist manquant"
+            exit 1
+          fi
+          if [ ! -f "dist/index.html" ]; then
+            echo "❌ Erreur: index.html manquant"
+            exit 1
+          fi
+          echo "✅ Build valide"
+          du -sh dist/
 
       # Upload artefact avec nom unique par version Node
       - name: Upload build artifact
